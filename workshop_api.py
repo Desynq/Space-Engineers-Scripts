@@ -22,8 +22,7 @@ def convert_to_bytes(size_str):
 
 
 
-def get_mod_size(workshop_id: int):
-	default_value = 0
+def get_mod_size(workshop_id: int, default_value=0):
 
 	mod_url = f'https://steamcommunity.com/sharedfiles/filedetails/?id={workshop_id}'
 
@@ -49,3 +48,28 @@ def get_mod_size(workshop_id: int):
 
 	file_size = details_stats[0].text
 	return convert_to_bytes(file_size)
+
+
+def get_mod_tags(workshop_id: int, default_value=''):
+
+	mod_url = f'https://steamcommunity.com/sharedfiles/filedetails/?id={workshop_id}'
+	response = requests.get(mod_url)
+	if response.status_code != 200:
+		return default_value
+	
+	soup = BeautifulSoup(response.text, 'html.parser')
+
+	workshop_tags_divs = soup.find_all('div', class_='workshopTags')
+
+	if len(workshop_tags_divs) < 2:
+		return default_value
+	
+	second_workshop_tags_div = workshop_tags_divs[1]
+	tag_links = second_workshop_tags_div.find_all('a')
+
+	tags = [tag.text for tag in tag_links]
+	for i, tag in enumerate(tags):
+		if tag == 'hud':
+			tags[i] = 'HUD'
+
+	return ', '.join(tags)
